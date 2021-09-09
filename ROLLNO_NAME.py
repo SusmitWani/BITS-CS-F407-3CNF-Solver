@@ -25,7 +25,8 @@ def generate_population(m=20, n=50):
 
 # Claculates fitness of a particular assignment
 def calculate_fitness(assignment, sentence):
-    tot = np.array(sentence).shape[0]
+    # tot = np.array(sentence).shape[0]
+    tot = len(sentence)
     sat = 0
     for clause in sentence:
         satisfy = False
@@ -38,34 +39,63 @@ def calculate_fitness(assignment, sentence):
     return (sat/tot)
 
 
-def fitness_with_nonsat(assignment, sentence):
-    num_vars = len(assignment)
-    keys = np.arange(0, num_vars)
-    vals = [0]*num_vars
-    nonsat_vars_times = dict(zip(keys, val))
-    tot = np.array(sentence).shape[0]
-    sat = 0
-    for clause in sentence:
-        satisfy = False
-        for var in clause:
-            if (var > 0 and assignment[abs(var) - 1]) or (var < 0 and not assignment[abs(var) - 1]):
-                satisfy = True
-                break
-        if satisfy:
-            sat = sat + 1
+# Get fitness and a map of unsat clauses and their counts
+def fitness_mod(population, sentence):
+    sat_percentage = []
+    unsat_count = []
+    for assignment in population:
+        tot = len(sentence)
+        sat = 0
+        unsat_list = [0]*len(assignment)
+        for clause in sentence:
+            satisfy = False
+            for var in clause:
+                if(var > 0 and assignment[abs(var) - 1]) or (var < 0 and not assignment[abs(var) - 1]):
+                    satisfy = True
+                    break
+            if(satisfy):
+                sat = sat+1
+            else:
+                for var in clause:
+                    unsat_list[abs(var)-1] = unsat_list[abs(var)-1]+1
+        # print(len(unsat_list))
+        sat_percentage.append(sat/tot)
+        unsat_count.append(unsat_list)
+    return sat_percentage, np.mean(unsat_count, axis=0)
 
 
 def reproduce(x, y):
     # randint from 1 because we want some part of x in child
     c = random.randint(1, len(x)-1)
-    child = x[:c] + y[c:]
-    return child
+    ret = []
+    for i in x[:c]:
+        ret.append(i)
+    for i in y[c:]:
+        ret.append(i)
+    return ret
 
 
 def mutate(x):
     pos = random.randint(0, len(x)-1)
-    x[pos] = not x[pos]
-    return x
+    ret = []
+    for gg in x[:pos]:
+        ret.append(gg)
+    ret.append(not x[pos])
+    for gg in x[pos+1:]:
+        ret.append(gg)
+    return ret
+
+
+def mod_mutate(x, unsat_counts):
+    pos = random.choices(list(np.arange(0, len(x))),
+                         k=1, weights=unsat_counts**2)
+    ret = []
+    for gg in x[:pos[0]]:
+        ret.append(gg)
+    ret.append(not x[pos[0]])
+    for gg in x[pos[0]+1:]:
+        ret.append(gg)
+    return ret
 
 
 def genetic_algo(population, fitness_array, sentence, delta=0.5):
@@ -113,17 +143,17 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
     total_time = 0
     pass_number = 0
     start_time = time.time()
+    best_assignment = []
+    best_fitness = 0
     while(True):
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
                   pass_number, "is", max(fitness_array))
         end_time = time.time()
         if(end_time - start_time > 45 or max(fitness_array) == 1):
-            max_fitness = max(fitness_array)
-            idx = fitness_array.index(max_fitness)
             total_time = end_time - start_time
-            print('Best model : ', population[idx])
-            print('Fitness value of best model : ', (max_fitness))
+            print('Best model : ', best_assignment)
+            print('Fitness value of best model : ', (best_fitness))
             print('Time taken : ', total_time, ' seconds')
             print("Generation Number: ", pass_number)
             print('\n\n')
@@ -131,7 +161,7 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
         new_population = []
         while(len(new_population) != len(population)):
             parent1, parent2 = random.choices(
-                population, k=2, weights=np.array(fitness_array)**2)
+                population, k=2, weights=((np.array(fitness_array))**2))
             # print(len(parents))
             child = reproduce(parent1, parent2)
             child_fitness = calculate_fitness(child, sentence)
@@ -144,15 +174,15 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
                 child = mutate(child)
             new_population.append(child)
         population = new_population
-        fitness_array = []
-        for assignment in population:
-            fitness = calculate_fitness(assignment, sentence)
-            fitness_array.append(fitness)
+        fitness_array = [calculate_fitness(
+            assignment, sentence) for assignment in population]
+        best_fitness = max(fitness_array)
+        best_assignment = population[fitness_array.index(best_fitness)]
         pass_number = pass_number + 1
-    return total_time, max(fitness_array)
+    return total_time, best_fitness, best_assignment
 
 
-def GArejecc_with_select_mut(population, fitness_array, sentence, delta=0.5):
+def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
     print("Started modified GA with selective mutation and rejection for population size", len(
         population), "and sentence length", len(sentence))
     total_time = 0
@@ -174,27 +204,23 @@ def GArejecc_with_select_mut(population, fitness_array, sentence, delta=0.5):
             print("Generation Number: ", pass_number)
             print('\n\n')
             break
-        new_population = []
-
-        while(len(new_population) != len(population)):
+        # Actual Genetic Algorithm start
+        new_sample = []
+        for i in range(2*len(population)):
             parent1, parent2 = random.choices(
-                population, k=2, weights=np.array(fitness_array)**2)
+                population, k=2, weights=(np.array(fitness_array))**2)
             # print(len(parents))
-            child = reproduce(parent1, parent2)
-            child_fitness = calculate_fitness(child, sentence)
-            p1_fitness = fitness_array[population.index(parent1)]
-            p2_fitness = fitness_array[population.index(parent2)]
-            if(child_fitness < p1_fitness or child_fitness < p2_fitness):
-                continue
-                # reject the weak child. Power same as parents is acceptable
-            if(random.random() < delta):
-                child = mutate(child)
-            new_population.append(child)
-        population = new_population
-        fitness_array = []
-        for assignment in population:
-            fitness = calculate_fitness(assignment, sentence)
-            fitness_array.append(fitness)
+            child = reproduce(np.array(parent1), np.array(parent2))
+            child_mod = mod_mutate(child, unsat_counts)
+            new_sample.append(child)
+            new_sample.append(child_mod)
+        fitness_array_temp, unsat_counts_temp = fitness_mod(
+            population, sentence)
+        fitness_array_temp_np = np.array(fitness_array_temp)
+        inds = np.array(fitness_array_temp_np.argsort())
+        population = np.array(new_sample)[inds[:len(population)]]
+        fitness_array = fitness_array_temp_np[inds[:len(population)]]
+        unsat_counts = unsat_counts[inds[:len(population)]]
         pass_number = pass_number + 1
     return total_time, max(fitness_array)
 
@@ -216,27 +242,31 @@ def main():
     # print(list(population))
     # print(np.array(population).shape)
 
-    fitness_array = []
-    for assignment in population:
-        fitness = calculate_fitness(assignment, sentence)
-        fitness_array.append(fitness)
+    # fitness_array = [calculate_fitness(
+    #     assignment, sentence) for assignment in population]
+    fitness_array, unsat_counts = fitness_mod(
+        population, sentence)
 
     # print(fitness_array)
     # print(len(fitness_array))
     times = []
     sat_percentage = []
+    best_assignments = []
     for i in range(10):
         # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
-        t, f = genetic_algo_with_rejecc(
-            population, fitness_array, sentence, 0.75)
+        t, f, a = genetic_algo_with_rejecc(
+            population, fitness_array, sentence, 1)
+        # t, f = GArejecc_with_select_mut(
+        #     population, fitness_array, unsat_counts, sentence)
         times.append(t)
         sat_percentage.append(f)
+        best_assignments.append(a)
+
     print(list(times))
     print(np.mean(times))
 
     print(list(sat_percentage))
-    print("Average fitness value of best GA model: ", np.mean(sat_percentage))
-    # print(reproduce([1, 1, 1, 1, 1, 1, 1], [2, 2, 2, 2, 2, 2, 2]))
+    print("Success rate of GA:", sat_percentage.count(1)*10)
     # -------------------------------END CODE HERE-----------------------------
 
 #    print('\n\n')

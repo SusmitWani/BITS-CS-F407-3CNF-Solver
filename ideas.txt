@@ -7,4 +7,7 @@ Ideas for the Assignment 1 of the course CS F407, Artificial Intelligence held d
 3. Reproduce using 3/4 parents?
 
 4. Reject offspring if fitness less than parent(s)?
--> Works like a charm!!!
+-> Works!!!
+
+
+5. Make multiple children with a variable flipped. So 2 kids with one gene change. Then pick best x from these 2x.
