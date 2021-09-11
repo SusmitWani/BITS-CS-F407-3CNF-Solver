@@ -1,6 +1,7 @@
 Ideas for the Assignment 1 of the course CS F407, Artificial Intelligence held during the first semester of the academic year 2021-2022
 
 1. Change fitness function to be the square of percentage of terms satisfied. This will work better as there is more clear distinction between good and bad genes due to squaring of value.
+-> Implemented
 
 2. Somehow incorporate mutation in only the variables in the unsatisfiable clauses. Maybe keep track of unsatisfiable variables in a separate list. 50 variables so not much memory used anyways. But may hamper performance as improvement in 1 can lead to loss in 2-3 other clauses. Will have to check.
 
@@ -11,3 +12,6 @@ Ideas for the Assignment 1 of the course CS F407, Artificial Intelligence held d
 
 
 5. Make multiple children with a variable flipped. So 2 kids with one gene change. Then pick best x from these 2x.
+
+
+6. Check for best neighbour instead of mutating. If no bettew neighbour, just randomly mutate. Same for reproduce

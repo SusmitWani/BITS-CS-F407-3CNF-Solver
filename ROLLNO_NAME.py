@@ -75,7 +75,9 @@ def reproduce(x, y):
     return ret
 
 
-def mutate(x):
+def mutate(x, delta=0.5):
+    if(random.random() >= delta):
+        return x
     pos = random.randint(0, len(x)-1)
     ret = []
     for gg in x[:pos]:
@@ -86,9 +88,11 @@ def mutate(x):
     return ret
 
 
-def mod_mutate(x, unsat_counts):
+def mod_mutate(x, unsat_counts, delta=0.5):
+    if(random.random() >= delta):
+        return x
     pos = random.choices(list(np.arange(0, len(x))),
-                         k=1, weights=unsat_counts**2)
+                         k=1, weights=(unsat_counts)**2)
     ret = []
     for gg in x[:pos[0]]:
         ret.append(gg)
@@ -125,8 +129,7 @@ def genetic_algo(population, fitness_array, sentence, delta=0.5):
                 population, k=2, weights=np.array(fitness_array)**2)
             # print(len(parents))
             child = reproduce(parents[0], parents[1])
-            if(random.random() < delta):
-                child = mutate(child)
+            child = mutate(child)
             new_population.append(child)
         population = new_population
         fitness_array = []
@@ -170,8 +173,7 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
             if(child_fitness < p1_fitness or child_fitness < p2_fitness):
                 continue
                 # reject the weak child. Power same as parents is acceptable
-            if(random.random() < delta):
-                child = mutate(child)
+            child = mutate(child)
             new_population.append(child)
         population = new_population
         fitness_array = [calculate_fitness(
@@ -195,6 +197,7 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
                   pass_number, "is", max(fitness_array))
+            # print(unsat_counts)
         end_time = time.time()
         # end loop code
         if(end_time - start_time > 45 or max(fitness_array) == 1):
@@ -209,24 +212,32 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
             break
         # Actual Genetic Algorithm start
         new_sample = []
-        for i in range(n):
+
+        while len(new_sample) != 4*n:
             parent1, parent2 = random.choices(
                 population, k=2, weights=(np.array(fitness_array))**2)
             # print(len(parents))
+            p1_fitness = calculate_fitness(parent1, sentence)
+            p2_fitness = calculate_fitness(parent2, sentence)
             child = reproduce(np.array(parent1), np.array(parent2))
-            child_mod = mod_mutate(child, (unsat_counts+1))
-            new_sample.append(child)
-            new_sample.append(child_mod)
+            child_fitness = calculate_fitness(child, sentence)
+            if(child_fitness < p1_fitness or child_fitness < p2_fitness):
+                continue
+            child_mod1 = mod_mutate(child, (unsat_counts+0.1), delta=0.8)
+            child_mod2 = mutate(child, delta=0.8)
+            # new_sample.append(child)
+            new_sample.append(child_mod1)
+            new_sample.append(child_mod2)
         fitness_array_temp, unsat_counts_temp = fitness_mod(
             new_sample, sentence)
-        # print(len(fitness_array_temp))
-        # print(len(unsat_counts_temp))
         fitness_array_temp_np = np.array(fitness_array_temp)
         inds = np.array(fitness_array_temp_np.argsort())
         inds = inds[::-1]
         # print(inds)
-        population = np.array(new_sample)[inds[:n]]
+        population = list(np.array(new_sample)[inds[:n]])
         fitness_array = list(fitness_array_temp_np[inds[:n]])
+        _, unsat_counts = fitness_mod(
+            population, sentence)
         unsat_counts = unsat_counts_temp
         best_fitness = max(fitness_array)
         best_assignment = population[fitness_array.index(best_fitness)]
