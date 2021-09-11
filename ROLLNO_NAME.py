@@ -188,6 +188,9 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
     total_time = 0
     pass_number = 0
     start_time = time.time()
+    n = len(population)
+    best_assignment = []
+    best_fitness = 0
     while(True):
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
@@ -206,23 +209,29 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
             break
         # Actual Genetic Algorithm start
         new_sample = []
-        for i in range(2*len(population)):
+        for i in range(n):
             parent1, parent2 = random.choices(
                 population, k=2, weights=(np.array(fitness_array))**2)
             # print(len(parents))
             child = reproduce(np.array(parent1), np.array(parent2))
-            child_mod = mod_mutate(child, unsat_counts)
+            child_mod = mod_mutate(child, (unsat_counts+1))
             new_sample.append(child)
             new_sample.append(child_mod)
         fitness_array_temp, unsat_counts_temp = fitness_mod(
-            population, sentence)
+            new_sample, sentence)
+        # print(len(fitness_array_temp))
+        # print(len(unsat_counts_temp))
         fitness_array_temp_np = np.array(fitness_array_temp)
         inds = np.array(fitness_array_temp_np.argsort())
-        population = np.array(new_sample)[inds[:len(population)]]
-        fitness_array = fitness_array_temp_np[inds[:len(population)]]
-        unsat_counts = unsat_counts[inds[:len(population)]]
+        inds = inds[::-1]
+        # print(inds)
+        population = np.array(new_sample)[inds[:n]]
+        fitness_array = list(fitness_array_temp_np[inds[:n]])
+        unsat_counts = unsat_counts_temp
+        best_fitness = max(fitness_array)
+        best_assignment = population[fitness_array.index(best_fitness)]
         pass_number = pass_number + 1
-    return total_time, max(fitness_array)
+    return total_time, best_fitness, best_assignment
 
 
 def main():
@@ -254,10 +263,10 @@ def main():
     best_assignments = []
     for i in range(10):
         # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
-        t, f, a = genetic_algo_with_rejecc(
-            population, fitness_array, sentence, 1)
-        # t, f = GArejecc_with_select_mut(
-        #     population, fitness_array, unsat_counts, sentence)
+        # t, f, a = genetic_algo_with_rejecc(
+        #     population, fitness_array, sentence, 1)
+        t, f, a = GArejecc_with_select_mut(
+            population, fitness_array, unsat_counts, sentence)
         times.append(t)
         sat_percentage.append(f)
         best_assignments.append(a)

@@ -78,8 +78,29 @@ def main():
     # print(fitness_array)
     # print(unsat_arr)
     # gg = mod_mutate(population[0], unsat_arr)
-    gg = reproduce([0, 0, 0, 0], [1, 1, 1, 1])
-    print(gg)
+    # gg = reproduce([0, 0, 0, 0], [1, 1, 1, 1])
+    # Actual Genetic Algorithm start
+    new_sample = []
+    n = len(population)
+    for i in range(2*len(population)):
+        parent1, parent2 = random.choices(
+            population, k=2, weights=(np.array(fitness_array))**2)
+        # print(len(parents))
+        child = reproduce(np.array(parent1), np.array(parent2))
+        child_mod = mod_mutate(child, unsat_arr)
+        new_sample.append(child)
+        new_sample.append(child_mod)
+    fitness_array_temp, unsat_counts_temp = fitness_mod(
+        new_sample, sentence)
+    fitness_array_temp_np = np.array(fitness_array_temp)
+    print(fitness_array_temp_np)
+    inds = np.array(fitness_array_temp_np.argsort())
+    print(inds)
+    inds = inds[::-1]
+    print(inds)
+    population = np.array(new_sample)[inds[:n]]
+    fitness_array = fitness_array_temp_np[inds[:n]]
+    unsat_counts = unsat_counts_temp[inds[:n]]
     # print(gg)
     # print(population[0])
 
