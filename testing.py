@@ -57,16 +57,24 @@ def reproduce(x, y):
     return ret
 
 
-def mod_mutate(x, unsat_counts):
+def flip_bit(x, pos):
+    x[pos] = not x[pos]
+    return x
+
+
+def mutate(x, delta=0.5):
+    if(random.random() >= delta):
+        return x
+    pos = random.randint(0, len(x)-1)
+    return flip_bit(x, pos)
+
+
+def mod_mutate(x, unsat_counts, delta=0.5):
+    if(random.random() >= delta):
+        return x
     pos = random.choices(list(np.arange(0, len(x))),
-                         k=1, weights=unsat_counts**2)
-    ret = []
-    for gg in x[:pos[0]]:
-        ret.append(gg)
-    ret.append(not x[pos[0]])
-    for gg in x[pos[0]+1:]:
-        ret.append(gg)
-    return ret
+                         k=1, weights=(unsat_counts)**2)
+    return flip_bit(x, pos[0])
 
 
 def main():
@@ -77,30 +85,11 @@ def main():
     print("Shape of Sentence: ", np.array(sentence).shape)
     # print(fitness_array)
     # print(unsat_arr)
-    # gg = mod_mutate(population[0], unsat_arr)
+    print(population[0])
+    gg = mod_mutate(population[0], unsat_arr, 1)
     # gg = reproduce([0, 0, 0, 0], [1, 1, 1, 1])
-    # Actual Genetic Algorithm start
-    new_sample = []
-    n = len(population)
-    for i in range(2*len(population)):
-        parent1, parent2 = random.choices(
-            population, k=2, weights=(np.array(fitness_array))**2)
-        # print(len(parents))
-        child = reproduce(np.array(parent1), np.array(parent2))
-        child_mod = mod_mutate(child, unsat_arr)
-        new_sample.append(child)
-        new_sample.append(child_mod)
-    fitness_array_temp, unsat_counts_temp = fitness_mod(
-        new_sample, sentence)
-    fitness_array_temp_np = np.array(fitness_array_temp)
-    print(fitness_array_temp_np)
-    inds = np.array(fitness_array_temp_np.argsort())
-    print(inds)
-    inds = inds[::-1]
-    print(inds)
-    population = np.array(new_sample)[inds[:n]]
-    fitness_array = fitness_array_temp_np[inds[:n]]
-    unsat_counts = unsat_counts_temp[inds[:n]]
+    # gg = flip_bit([True, True, True, False], 3)
+    print(gg)
     # print(gg)
     # print(population[0])
 

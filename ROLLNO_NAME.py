@@ -61,6 +61,7 @@ def fitness_mod(population, sentence):
         # print(len(unsat_list))
         sat_percentage.append(sat/tot)
         unsat_count.append(unsat_list)
+    # print(sat_percentage)
     return sat_percentage, np.mean(unsat_count, axis=0)
 
 
@@ -75,17 +76,16 @@ def reproduce(x, y):
     return ret
 
 
+def flip_bit(x, pos):
+    x[pos] = not x[pos]
+    return x
+
+
 def mutate(x, delta=0.5):
     if(random.random() >= delta):
         return x
     pos = random.randint(0, len(x)-1)
-    ret = []
-    for gg in x[:pos]:
-        ret.append(gg)
-    ret.append(not x[pos])
-    for gg in x[pos+1:]:
-        ret.append(gg)
-    return ret
+    return flip_bit(x, pos)
 
 
 def mod_mutate(x, unsat_counts, delta=0.5):
@@ -93,13 +93,11 @@ def mod_mutate(x, unsat_counts, delta=0.5):
         return x
     pos = random.choices(list(np.arange(0, len(x))),
                          k=1, weights=(unsat_counts)**2)
-    ret = []
-    for gg in x[:pos[0]]:
-        ret.append(gg)
-    ret.append(not x[pos[0]])
-    for gg in x[pos[0]+1:]:
-        ret.append(gg)
-    return ret
+    return flip_bit(x, pos[0])
+
+
+def get_best_neb(x, sentence):
+    for
 
 
 def genetic_algo(population, fitness_array, sentence, delta=0.5):
@@ -212,11 +210,12 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
             break
         # Actual Genetic Algorithm start
         new_sample = []
-
-        while len(new_sample) != 4*n:
+        while len(new_sample) != 2*n:
             parent1, parent2 = random.choices(
                 population, k=2, weights=(np.array(fitness_array))**2)
             # print(len(parents))
+            # p1_fitness = fitness_array[population.index(parent1)]
+            # p2_fitness = fitness_array[population.index(parent2)]
             p1_fitness = calculate_fitness(parent1, sentence)
             p2_fitness = calculate_fitness(parent2, sentence)
             child = reproduce(np.array(parent1), np.array(parent2))
