@@ -97,7 +97,12 @@ def mod_mutate(x, unsat_counts, delta=0.5):
 
 
 def get_best_neb(x, sentence):
-    for
+    neighbours = []
+    for i in range(len(x)):
+        neighbours.append(flip_bit(x, i))
+    fitness_arr = [calculate_fitness(assignment, sentence)
+                   for assignment in neighbours]
+    return neighbours[fitness_arr.index(max(fitness_arr))]
 
 
 def genetic_algo(population, fitness_array, sentence, delta=0.5):
