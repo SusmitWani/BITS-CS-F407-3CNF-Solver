@@ -102,7 +102,7 @@ def get_best_neb(x, sentence):
         neighbours.append(flip_bit(x, i))
     fitness_arr = [calculate_fitness(assignment, sentence)
                    for assignment in neighbours]
-    return neighbours[fitness_arr.index(max(fitness_arr))]
+    return neighbours[fitness_arr.index(max(fitness_arr))], max(fitness_arr)
 
 
 def genetic_algo(population, fitness_array, sentence, delta=0.5):
