@@ -176,7 +176,7 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
             if(child_fitness < p1_fitness or child_fitness < p2_fitness):
                 continue
                 # reject the weak child. Power same as parents is acceptable
-            child = mutate(child)
+            child = mutate(child, delta=delta)
             new_population.append(child)
         population = new_population
         fitness_array = [calculate_fitness(
@@ -244,8 +244,9 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
         _, unsat_counts = fitness_mod(
             population, sentence)
         unsat_counts = unsat_counts_temp
-        best_fitness = max(fitness_array)
-        best_assignment = population[fitness_array.index(best_fitness)]
+        best_fitness = max(max(fitness_array), best_fitness)
+        if best_fitness == max(fitness_array):
+            best_assignment = population[fitness_array.index(best_fitness)]
         pass_number = pass_number + 1
     return total_time, best_fitness, best_assignment
 
@@ -277,10 +278,11 @@ def main():
     times = []
     sat_percentage = []
     best_assignments = []
-    for i in range(10):
+    runs = 5
+    for i in range(runs):
         # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
         # t, f, a = genetic_algo_with_rejecc(
-        #     population, fitness_array, sentence, 1)
+        #     population, fitness_array, sentence)
         t, f, a = GArejecc_with_select_mut(
             population, fitness_array, unsat_counts, sentence)
         times.append(t)
@@ -291,7 +293,7 @@ def main():
     print(np.mean(times))
 
     print(list(sat_percentage))
-    print("Success rate of GA:", sat_percentage.count(1)*10)
+    print("Success rate of GA:", sat_percentage.count(1)*runs)
     # -------------------------------END CODE HERE-----------------------------
 
 #    print('\n\n')
