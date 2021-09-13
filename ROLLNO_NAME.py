@@ -181,8 +181,9 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
         population = new_population
         fitness_array = [calculate_fitness(
             assignment, sentence) for assignment in population]
-        best_fitness = max(fitness_array)
-        best_assignment = population[fitness_array.index(best_fitness)]
+        best_fitness = max(max(fitness_array), best_fitness)
+        if best_fitness == max(fitness_array):
+            best_assignment = population[fitness_array.index(best_fitness)]
         pass_number = pass_number + 1
     return total_time, best_fitness, best_assignment
 
