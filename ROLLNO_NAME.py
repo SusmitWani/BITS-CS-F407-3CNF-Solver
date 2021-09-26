@@ -193,10 +193,10 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
         population), "and sentence length", len(sentence))
     total_time = 0
     pass_number = 0
-    start_time = time.time()
     n = len(population)
     best_assignment = []
     best_fitness = 0
+    start_time = time.time()
     while(True):
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
@@ -204,7 +204,15 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
             # print(unsat_counts)
         end_time = time.time()
         # check early stop
-
+        if(len(sentence) > 250) and pass_number > 500:
+            total_time = end_time - start_time
+            print("Stopping Early")
+            print('Best model : ', best_assignment)
+            print('Fitness value of best model : ', best_fitness)
+            print('Time taken : ', total_time, ' seconds')
+            print("Generation Number: ", pass_number)
+            print('\n\n')
+            break
         # end loop code
         if(end_time - start_time > 45 or max(fitness_array) == 1):
             total_time = end_time - start_time
@@ -278,7 +286,7 @@ def main():
     times = []
     sat_percentage = []
     best_assignments = []
-    runs = 5
+    runs = 10
     for i in range(runs):
         # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
         # t, f, a = genetic_algo_with_rejecc(
