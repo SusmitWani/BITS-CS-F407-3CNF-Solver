@@ -203,13 +203,13 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
                   pass_number, "is", max(fitness_array))
             # print(unsat_counts)
         end_time = time.time()
+        # check early stop
+
         # end loop code
         if(end_time - start_time > 45 or max(fitness_array) == 1):
-            max_fitness = max(fitness_array)
-            idx = fitness_array.index(max_fitness)
             total_time = end_time - start_time
-            print('Best model : ', population[idx])
-            print('Fitness value of best model : ', (max_fitness))
+            print('Best model : ', best_assignment)
+            print('Fitness value of best model : ', best_fitness)
             print('Time taken : ', total_time, ' seconds')
             print("Generation Number: ", pass_number)
             print('\n\n')
@@ -293,7 +293,9 @@ def main():
     print(np.mean(times))
 
     print(list(sat_percentage))
-    print("Success rate of GA:", sat_percentage.count(1)*runs)
+    print("Success rate of GA:", sat_percentage.count(1)/runs)
+    end_time = time.time()
+    print("Average time needed: ", (end_time - start_time)/runs)
     # -------------------------------END CODE HERE-----------------------------
 
 #    print('\n\n')
@@ -303,9 +305,6 @@ def main():
 #    print('Fitness value of best model : 99%')
 #    print('Time taken : 5.23 seconds')
 #    print('\n\n')
-
-    end_time = time.time()
-    print("Average time needed: ", (end_time - start_time)/10)
 
 
 if __name__ == '__main__':
