@@ -4,6 +4,7 @@ Ideas for the Assignment 1 of the course CS F407, Artificial Intelligence held d
 -> Implemented
 
 2. Somehow incorporate mutation in only the variables in the unsatisfiable clauses. Maybe keep track of unsatisfiable variables in a separate list. 50 variables so not much memory used anyways. But may hamper performance as improvement in 1 can lead to loss in 2-3 other clauses. Will have to check.
+-> Implemented
 
 3. Reproduce using 3/4 parents?
 
@@ -12,6 +13,7 @@ Ideas for the Assignment 1 of the course CS F407, Artificial Intelligence held d
 
 
 5. Make multiple children with a variable flipped. So 2 kids with one gene change. Then pick best x from these 2x.
-
+-> Something similar Implemented
 
 6. Check for best neighbour instead of mutating. If no bettew neighbour, just randomly mutate. Same for reproduce
+-> Too slow. So not using

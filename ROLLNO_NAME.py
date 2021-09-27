@@ -102,7 +102,11 @@ def get_best_neb(x, sentence):
         neighbours.append(flip_bit(x, i))
     fitness_arr = [calculate_fitness(assignment, sentence)
                    for assignment in neighbours]
-    return neighbours[fitness_arr.index(max(fitness_arr))], max(fitness_arr)
+    max_fit = max(fitness_arr)
+    child_fitness = calculate_fitness(x, sentence)
+    if(max_fit < child_fitness):
+        return x, child_fitness
+    return neighbours[fitness_arr.index(max_fit)], max_fit
 
 
 def genetic_algo(population, fitness_array, sentence, delta=0.5):
@@ -152,6 +156,7 @@ def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
     best_assignment = []
     best_fitness = 0
     while(True):
+        # print("Best fitness: ", best_fitness)
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
                   pass_number, "is", max(fitness_array))
@@ -194,26 +199,14 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
     total_time = 0
     pass_number = 0
     n = len(population)
-    best_assignment = []
-    best_fitness = 0
+    best_fitness = max(fitness_array)
+    best_assignment = population[fitness_array.index(best_fitness)]
     start_time = time.time()
     while(True):
         if pass_number % 100 == 0:
             print("Fitness value of the best model for generation",
                   pass_number, "is", max(fitness_array))
-            # print(unsat_counts)
         end_time = time.time()
-        # check early stop
-        if(len(sentence) > 250) and pass_number > 500:
-            total_time = end_time - start_time
-            print("Stopping Early")
-            print('Best model : ', best_assignment)
-            print('Fitness value of best model : ', best_fitness)
-            print('Time taken : ', total_time, ' seconds')
-            print("Generation Number: ", pass_number)
-            print('\n\n')
-            break
-        # end loop code
         if(end_time - start_time > 45 or max(fitness_array) == 1):
             total_time = end_time - start_time
             print('Best model : ', best_assignment)
@@ -227,12 +220,11 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
         while len(new_sample) != 2*n:
             parent1, parent2 = random.choices(
                 population, k=2, weights=(np.array(fitness_array))**2)
-            # print(len(parents))
             # p1_fitness = fitness_array[population.index(parent1)]
             # p2_fitness = fitness_array[population.index(parent2)]
             p1_fitness = calculate_fitness(parent1, sentence)
             p2_fitness = calculate_fitness(parent2, sentence)
-            child = reproduce(np.array(parent1), np.array(parent2))
+            child = list(reproduce(np.array(parent1), np.array(parent2)))
             child_fitness = calculate_fitness(child, sentence)
             if(child_fitness < p1_fitness or child_fitness < p2_fitness):
                 continue
@@ -260,51 +252,40 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
 
 
 def main():
-    start_time = time.time()
 
     # -------------------------------START CODE HERE---------------------------
     # n is number of symbols in the 3-CNF sentence
     # m is number of clauses in the 3-CNF sentence
     cnfC = CNF_Creator(n=50)
-    # sentence = cnfC.CreateRandomSentence(m=100)
-    # print('Random sentence : ', sentence)
 
-    sentence = cnfC.ReadCNFfromCSVfile()
-    # print('\nSentence from CSV file : ', sentence)
-
+    # sentence = cnfC.ReadCNFfromCSVfile()
+    sentence = cnfC.CreateRandomSentence(m=200)
     population = generate_population(m=50)
-    # print(list(population))
-    # print(np.array(population).shape)
 
-    # fitness_array = [calculate_fitness(
-    #     assignment, sentence) for assignment in population]
-    fitness_array, unsat_counts = fitness_mod(
-        population, sentence)
+    fitness_array, unsat_counts = fitness_mod(population, sentence)
 
-    # print(fitness_array)
-    # print(len(fitness_array))
     times = []
     sat_percentage = []
     best_assignments = []
     runs = 10
+    start_time = time.time()
     for i in range(runs):
         # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
         # t, f, a = genetic_algo_with_rejecc(
-        #     population, fitness_array, sentence)
+        #     population, fitness_array, sentence, delta=0.75)
         t, f, a = GArejecc_with_select_mut(
             population, fitness_array, unsat_counts, sentence)
         times.append(t)
         sat_percentage.append(f)
         best_assignments.append(a)
 
+    end_time = time.time()
     print(list(times))
-    print(np.mean(times))
-
     print(list(sat_percentage))
     print("Success rate of GA:", sat_percentage.count(1)/runs)
-    end_time = time.time()
-    print("Average time needed: ", (end_time - start_time)/runs)
-    # -------------------------------END CODE HERE-----------------------------
+    print("Average fitness value:", sum(sat_percentage)/len(sat_percentage))
+    print("Average time needed for each run: ", (end_time - start_time)/runs)
+    # -------------------------------END CODE HERE-------------------------------
 
 #    print('\n\n')
 #    print('Roll No : 2020H1030999G')
