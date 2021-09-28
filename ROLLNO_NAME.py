@@ -256,35 +256,44 @@ def main():
     # -------------------------------START CODE HERE---------------------------
     # n is number of symbols in the 3-CNF sentence
     # m is number of clauses in the 3-CNF sentence
-    cnfC = CNF_Creator(n=50)
+    time_per_run = []
+    average_fitness = []
+    success_rate = []
+    for sentence_len in range(20, 301, 20):
+        times = []
+        sat_percentage = []
+        best_assignments = []
+        runs = 10
+        start_time = time.time()
+        for i in range(runs):
+            cnfC = CNF_Creator(n=50)
+            # sentence = cnfC.ReadCNFfromCSVfile()
+            sentence = cnfC.CreateRandomSentence(m=sentence_len)
+            population = generate_population(m=50)
+            fitness_array, unsat_counts = fitness_mod(population, sentence)
+            # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
+            # t, f, a = genetic_algo_with_rejecc(
+            #     population, fitness_array, sentence, delta=0.75)
+            t, f, a = GArejecc_with_select_mut(
+                population, fitness_array, unsat_counts, sentence)
+            times.append(t)
+            sat_percentage.append(f)
+            best_assignments.append(a)
 
-    # sentence = cnfC.ReadCNFfromCSVfile()
-    sentence = cnfC.CreateRandomSentence(m=200)
-    population = generate_population(m=50)
+        end_time = time.time()
+        # print(list(times))
+        # print(list(sat_percentage))
+        time_per_run.append((end_time - start_time)/runs)
+        average_fitness.append(sum(sat_percentage)/len(sat_percentage))
+        success_rate.append(sat_percentage.count(1)/runs)
+        print("Sentence len completed:", sentence_len)
+        # print("Success rate of GA:", sat_percentage.count(1)/runs)
+        # print("Average fitness value:", sum(sat_percentage)/len(sat_percentage))
+        # print("Average time needed for each run: ", (end_time - start_time)/runs)
 
-    fitness_array, unsat_counts = fitness_mod(population, sentence)
-
-    times = []
-    sat_percentage = []
-    best_assignments = []
-    runs = 10
-    start_time = time.time()
-    for i in range(runs):
-        # t, f = genetic_algo(population, fitness_array, sentence, 0.4)
-        # t, f, a = genetic_algo_with_rejecc(
-        #     population, fitness_array, sentence, delta=0.75)
-        t, f, a = GArejecc_with_select_mut(
-            population, fitness_array, unsat_counts, sentence)
-        times.append(t)
-        sat_percentage.append(f)
-        best_assignments.append(a)
-
-    end_time = time.time()
-    print(list(times))
-    print(list(sat_percentage))
-    print("Success rate of GA:", sat_percentage.count(1)/runs)
-    print("Average fitness value:", sum(sat_percentage)/len(sat_percentage))
-    print("Average time needed for each run: ", (end_time - start_time)/runs)
+    print(time_per_run)
+    print(average_fitness)
+    print(success_rate)
     # -------------------------------END CODE HERE-------------------------------
 
 #    print('\n\n')

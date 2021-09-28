@@ -26,7 +26,7 @@ class CNF_Creator:
                 clauses.append(claus)
             clauses.sort()
             # print(clauses, len(clauses))
-            print(len(clauses))
+            # print(len(clauses))
             clauses = list(clause for clause, _ in itertools.groupby(
                 clauses))  # removes duplicate clauses
             # print(clauses, len(clauses))
