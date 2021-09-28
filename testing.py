@@ -77,6 +77,90 @@ def mod_mutate(x, unsat_counts, delta=0.5):
     return flip_bit(x, pos[0])
 
 
+def genetic_algo(population, fitness_array, sentence, delta=0.5):
+    print("Started GA for population size", len(population),
+          "and sentence length", len(sentence))
+    total_time = 0
+    pass_number = 0
+    start_time = time.time()
+    while(True):
+        if pass_number % 1000 == 0:
+            print("Fitness value of the best model for generation",
+                  pass_number, "is", max(fitness_array))
+        end_time = time.time()
+        if(end_time - start_time > 45 or max(fitness_array) == 1):
+            max_fitness = max(fitness_array)
+            idx = fitness_array.index(max_fitness)
+            total_time = end_time - start_time
+            print('Best model : ', population[idx])
+            print('Fitness value of best model : ', (max_fitness))
+            print('Time taken : ', total_time, ' seconds')
+            print("Generation Number: ", pass_number)
+            print('\n\n')
+            break
+        new_population = []
+        for i in range(len(population)):
+            parents = random.choices(
+                population, k=2, weights=np.array(fitness_array)**2)
+            # print(len(parents))
+            child = reproduce(parents[0], parents[1])
+            child = mutate(child)
+            new_population.append(child)
+        population = new_population
+        fitness_array = []
+        for assignment in population:
+            fitness = calculate_fitness(assignment, sentence)
+            fitness_array.append(fitness)
+        pass_number = pass_number + 1
+    return total_time, max(fitness_array)
+
+
+def genetic_algo_with_rejecc(population, fitness_array, sentence, delta=0.5):
+    print("Started modified GA with rejection for population size",
+          len(population), "and sentence length", len(sentence))
+    total_time = 0
+    pass_number = 0
+    start_time = time.time()
+    best_assignment = []
+    best_fitness = 0
+    while(True):
+        # print("Best fitness: ", best_fitness)
+        if pass_number % 100 == 0:
+            print("Fitness value of the best model for generation",
+                  pass_number, "is", max(fitness_array))
+        end_time = time.time()
+        if(end_time - start_time > 45 or max(fitness_array) == 1):
+            total_time = end_time - start_time
+            print('Best model : ', best_assignment)
+            print('Fitness value of best model : ', (best_fitness))
+            print('Time taken : ', total_time, ' seconds')
+            print("Generation Number: ", pass_number)
+            print('\n\n')
+            break
+        new_population = []
+        while(len(new_population) != len(population)):
+            parent1, parent2 = random.choices(
+                population, k=2, weights=((np.array(fitness_array))**2))
+            # print(len(parents))
+            child = reproduce(parent1, parent2)
+            child_fitness = calculate_fitness(child, sentence)
+            p1_fitness = fitness_array[population.index(parent1)]
+            p2_fitness = fitness_array[population.index(parent2)]
+            if(child_fitness < p1_fitness or child_fitness < p2_fitness):
+                continue
+                # reject the weak child. Power same as parents is acceptable
+            child = mutate(child, delta=delta)
+            new_population.append(child)
+        population = new_population
+        fitness_array = [calculate_fitness(
+            assignment, sentence) for assignment in population]
+        best_fitness = max(max(fitness_array), best_fitness)
+        if best_fitness == max(fitness_array):
+            best_assignment = population[fitness_array.index(best_fitness)]
+        pass_number = pass_number + 1
+    return total_time, best_fitness, best_assignment
+
+
 def main():
     cnfC = CNF_Creator(n=50)
     sentence = cnfC.ReadCNFfromCSVfile()

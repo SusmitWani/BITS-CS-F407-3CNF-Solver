@@ -34,7 +34,7 @@ class CNF_Creator:
         return self._sentence
 
     def ReadCNFfromCSVfile(self):
-        with open('CNF5.csv') as csvfile:
+        with open('CNF.csv') as csvfile:
             rows = csv.reader(csvfile)
             rows = list(rows)
         sentence = [[int(i) for i in ro] for ro in rows]
