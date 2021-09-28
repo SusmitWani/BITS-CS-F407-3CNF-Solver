@@ -204,8 +204,8 @@ def GArejecc_with_select_mut(population, fitness_array, unsat_counts, sentence):
     start_time = time.time()
     while(True):
         if pass_number % 100 == 0:
-            print("Fitness value of the best model for generation",
-                  pass_number, "is", max(fitness_array))
+        print("Fitness value of the best model for generation",
+              pass_number, "is", max(fitness_array))
         end_time = time.time()
         if(end_time - start_time > 45 or max(fitness_array) == 1):
             total_time = end_time - start_time
